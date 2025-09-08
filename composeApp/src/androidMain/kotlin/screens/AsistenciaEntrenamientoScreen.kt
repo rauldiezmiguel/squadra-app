@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import viewModel.AndroidAsistenciaEntrenamientoViewModel
 import viewModel.AsistenciaEntrenamientoState
+import viewModel.GuardadoState
 
 // Colores de la app
 private val backgroundColor = Color(0xFFF9FAFB)
@@ -30,6 +31,7 @@ fun AsistenciaEntrenamientoScreen(
     onBack: () -> Unit
 ) {
     val state by asistenciaEntrenamientoViewModel.asistenciasState.collectAsState()
+    val guardadoState by asistenciaEntrenamientoViewModel.guardadoState.collectAsState()
 
 
     LaunchedEffect(idEntrenamiento) {
@@ -68,7 +70,38 @@ fun AsistenciaEntrenamientoScreen(
                     .padding(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = secondaryColor)
             ) {
-                Text("Guardar Asistencias", color = Color.White)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp), // altura fija para no "bailar"
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (guardadoState) {
+                        is GuardadoState.Saving -> {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                color = Color.White,
+                                trackColor = secondaryColor.copy(alpha = 0.3f)
+                            )
+                            Text(
+                                "Guardando...",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        is GuardadoState.Success -> {
+                            Text("✔ Guardado", color = Color.White, fontWeight = FontWeight.Medium)
+                        }
+                        is GuardadoState.Error -> {
+                            Text("Error. Reintentar", color = Color.White, fontWeight = FontWeight.Medium)
+                        }
+                        GuardadoState.Idle -> {
+                            Text("Guardar Asistencias", color = Color.White, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
             }
         },
         containerColor = backgroundColor
@@ -92,6 +125,7 @@ fun AsistenciaEntrenamientoScreen(
                 }
                 is AsistenciaEntrenamientoState.Success -> {
                     val lista = (state as AsistenciaEntrenamientoState.Success).asistencias
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()

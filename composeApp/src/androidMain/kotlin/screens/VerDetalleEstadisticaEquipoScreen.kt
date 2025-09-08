@@ -9,6 +9,8 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
@@ -55,6 +57,7 @@ fun VerDetalleEstadisticaEquipoScreen(
     val context = LocalContext.current
     val chartRefPie = remember { mutableStateOf<PieChart?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     // Trigger load
     LaunchedEffect(idEquipo, idTemporada, nomEstadistica) {
@@ -152,7 +155,11 @@ fun VerDetalleEstadisticaEquipoScreen(
                             Spacer(Modifier.height(16.dp))
 
                             // Leyenda personalizada
-                            Column(Modifier.padding(horizontal = 16.dp)) {
+                            Column(
+                                Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .verticalScroll(scrollState)
+                            ) {
                                 detallesJugadores.forEach { jugador ->
                                     val porcentaje = jugador.valorEstadistica * 100f / totalEquipo
                                     Row(

@@ -19,12 +19,22 @@ sealed class AsistenciaEntrenamientoJugadorState {
     data class Error(val message: String) : AsistenciaEntrenamientoJugadorState()
 }
 
+sealed class GuardadoState {
+    data object Idle : GuardadoState()
+    data object Saving : GuardadoState()
+    data object Success : GuardadoState()
+    data class Error(val message: String) : GuardadoState()
+}
+
 class AsistenciaEntrenamientoViewModel(private val tokenStorage: TokenStorage) : CommonViewModel() {
     private val _asistenciasState = MutableStateFlow<AsistenciaEntrenamientoState>(AsistenciaEntrenamientoState.Loading)
     val asistenciasState: StateFlow<AsistenciaEntrenamientoState> = _asistenciasState
 
     private val _asistenciasJugadorState = MutableStateFlow<AsistenciaEntrenamientoJugadorState>(AsistenciaEntrenamientoJugadorState.Loading)
     val asistenciasJugadorState: StateFlow<AsistenciaEntrenamientoJugadorState> = _asistenciasJugadorState
+
+    private val _guardadoState = MutableStateFlow<GuardadoState>(GuardadoState.Idle)
+    val guardadoState: StateFlow<GuardadoState> = _guardadoState
 
     private val cambiosPendientes = mutableMapOf<Int, Boolean>()
 
@@ -40,13 +50,7 @@ class AsistenciaEntrenamientoViewModel(private val tokenStorage: TokenStorage) :
             try {
                 val listaOriginal = AsistenciaEntrenamientosApi.getAsistencias(idEntrenamiento)
 
-                val listaConValoresIniciales = if (listaOriginal.all { it.asistio == false }) {
-                    listaOriginal.map { it.copy(asistio = true) }
-                } else {
-                    listaOriginal
-                }
-
-                _asistenciasState.value = AsistenciaEntrenamientoState.Success(listaConValoresIniciales)
+                _asistenciasState.value = AsistenciaEntrenamientoState.Success(listaOriginal)
             } catch (e: Exception) {
                 _asistenciasState.value = AsistenciaEntrenamientoState.Error(
                     e.message ?: "Error desconocido al cargar asistencias"
@@ -63,6 +67,7 @@ class AsistenciaEntrenamientoViewModel(private val tokenStorage: TokenStorage) :
         val current = _asistenciasState.value
         if (current is AsistenciaEntrenamientoState.Success) {
             viewModelScope.launch {
+                _guardadoState.value = GuardadoState.Saving
                 try {
                     // 1) Construye la lista actualizada con los cambios
                     val listaActualizada = current.asistencias.map { dto ->
@@ -87,9 +92,10 @@ class AsistenciaEntrenamientoViewModel(private val tokenStorage: TokenStorage) :
                     }
 
                     // 5) Callback final
+                    _guardadoState.value = GuardadoState.Success
                     onComplete()
                 } catch (e: Exception) {
-                    _asistenciasState.value = AsistenciaEntrenamientoState.Error(
+                    _guardadoState.value = GuardadoState.Error(
                         e.message ?: "Error al guardar asistencias"
                     )
                 }
