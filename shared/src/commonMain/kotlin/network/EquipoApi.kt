@@ -92,4 +92,25 @@ object EquipoApi {
             null
         }
     }
+
+    suspend fun getEquiposByClubByTemporada(idClub: Int, idTemporada: Int): List<EquipoDTO> {
+        return try {
+            val url = "${getApiBaseUrl()}/equipos/clubes/$idClub/temporadas/$idTemporada"
+            println(url)
+
+            val response: HttpResponse = client.get(url) {
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val equipos = response.body<List<EquipoDTO>>()
+                equipos
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            println("Error desconocido: ${e.message}")
+            emptyList()
+        }
+    }
 }

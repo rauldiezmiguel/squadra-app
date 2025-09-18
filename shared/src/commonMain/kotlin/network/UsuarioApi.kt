@@ -2,6 +2,7 @@ package network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -35,6 +36,14 @@ data class EquipoPerfilDTO(
     val id: Int,
     val nombreEquipo: String
     // añade aquí los campos que necesites
+)
+
+@Serializable
+data class UsuarioDTO(
+    val id: Int?,
+    val nombreUsuario: String,
+    val tipoUsuario: String,
+    val idClub: Int?
 )
 
 @Serializable
@@ -90,5 +99,44 @@ object UsuarioApi {
            println("Error cambiando la contraseña. ${e.message}")
            false
        }
+    }
+
+    suspend fun getUserByClub(idClub: Int): List<UsuarioDTO> {
+        return try {
+            val url = "${getApiBaseUrl()}/usuarios/clubes/$idClub"
+
+            val response: HttpResponse = client.get(url){
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK){
+                val usuarios = response.body<List<UsuarioDTO>>()
+                usuarios
+            } else {
+                emptyList<UsuarioDTO>()
+            }
+        } catch (e: Exception){
+            println("Error obteniendo los usuarios de un Club. ${e.message}")
+            emptyList<UsuarioDTO>()
+        }
+    }
+
+    suspend fun deleteUser(id: Int): Boolean {
+        return try {
+            val url = "${getApiBaseUrl()}/usuarios"
+
+            val response: HttpResponse = client.delete(url) {
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            println("Error eliminando el usuario con ID $id. ${e.message}")
+            false
+        }
     }
 }

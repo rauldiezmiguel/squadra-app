@@ -8,6 +8,7 @@ import network.EstadisticasApi
 import network.JugadorDTO
 import network.PerfilUsuarioDTO
 import network.UsuarioApi
+import network.UsuarioDTO
 
 sealed class PerfilState {
     data object Loading : PerfilState()
@@ -21,12 +22,30 @@ sealed class ChangePasswordState {
     data class Error(val message: String) : ChangePasswordState()
 }
 
+sealed class UsersByClubState {
+    data object Loading : UsersByClubState()
+    data class Success(val users: List<UsuarioDTO>) : UsersByClubState()
+    data class Error(val message: String) : UsersByClubState()
+}
+
+sealed class DeleteUserState {
+    data object Loading : DeleteUserState()
+    data class Success(val delete: Boolean) : DeleteUserState()
+    data class Error(val message: String) : DeleteUserState()
+}
+
 class UsuarioViewModel : CommonViewModel() {
     private val _perfil = MutableStateFlow<PerfilState>(PerfilState.Loading)
     val perfil: StateFlow<PerfilState> = _perfil
 
     private val _changePassword = MutableStateFlow<ChangePasswordState>(ChangePasswordState.Loading)
     val changePassword: StateFlow<ChangePasswordState> = _changePassword
+
+    private val _usersByClub = MutableStateFlow<UsersByClubState>(UsersByClubState.Loading)
+    val usersByClub: StateFlow<UsersByClubState> = _usersByClub
+
+    private val _deleteUser = MutableStateFlow<DeleteUserState>(DeleteUserState.Loading)
+    val deleteUser: StateFlow<DeleteUserState> = _deleteUser
 
     fun cargarPerfilUsuario() {
         viewModelScope.launch {
@@ -56,6 +75,38 @@ class UsuarioViewModel : CommonViewModel() {
                 }
             } catch (e: Exception) {
                 _changePassword.value = ChangePasswordState.Error("Error desconocido: ${e.message}")
+            }
+        }
+    }
+
+    fun getUserByClub(idClub: Int) {
+        viewModelScope.launch {
+            _usersByClub.value = UsersByClubState.Loading
+            try {
+                val response = UsuarioApi.getUserByClub(idClub)
+                if (response.isNotEmpty()) {
+                    _usersByClub.value = UsersByClubState.Success(response)
+                } else {
+                    _usersByClub.value = UsersByClubState.Error("Error obteniendo los usuarios del club con ID $idClub.")
+                }
+            } catch (e: Exception) {
+                _usersByClub.value = UsersByClubState.Error("Error desconocido: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteUser(id: Int) {
+        viewModelScope.launch {
+            _deleteUser.value = DeleteUserState.Loading
+            try {
+                val response = UsuarioApi.deleteUser(id)
+                if (response) {
+                    _deleteUser.value = DeleteUserState.Success(response)
+                } else {
+                    _deleteUser.value = DeleteUserState.Error("Error eliminando al usuario con ID $id.")
+                }
+            } catch (e: Exception) {
+                _deleteUser.value = DeleteUserState.Error("Error desconocido: ${e.message}")
             }
         }
     }

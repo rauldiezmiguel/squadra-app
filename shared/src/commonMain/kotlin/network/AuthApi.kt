@@ -40,6 +40,14 @@ data class RefreshTokenResponse(val new_access_token: String)
 @Serializable
 data class LogoutRequest(val userId: Int)
 
+@Serializable
+data class CreateUserRequest(
+    val nombreUsuario: String,
+    val passWrd: String,
+    val tipoUsuario: String,
+    val idClub: Int?
+)
+
 object AuthApi {
 
     private lateinit var client: HttpClient
@@ -95,6 +103,27 @@ object AuthApi {
             }
         } catch (e: Exception) {
             println("Error en logout: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun createUser(nombreUsuario: String, passWrd: String, tipoUsuario: String, idClub: Int?): Boolean {
+        return try {
+            val url = "${getApiBaseUrl()}/auth/register"
+            println(url)
+
+            val response: HttpResponse = client.post(url){
+                contentType(ContentType.Application.Json)
+                setBody(CreateUserRequest(nombreUsuario, passWrd, tipoUsuario, idClub))
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                true
+            } else {
+                false
+            }
+        }   catch (e: Exception) {
+            println("Error creando un usuario nuevo. ${e.message}")
             false
         }
     }
@@ -190,4 +219,6 @@ fun setupAuthApi(tokenStorage: TokenStorage) {
     CuartosRivalApi.initialize(httpClient)
     AlineacionEquipoApi.initialize(httpClient)
     AlineacionRivalApi.initialize(httpClient)
+    TemporadasApi.initialize(httpClient)
+    ClubesApi.initialize(httpClient)
 }

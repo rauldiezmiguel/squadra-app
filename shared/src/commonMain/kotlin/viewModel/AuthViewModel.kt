@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import network.AuthApi
+import network.CreateUserRequest
 
 // Define los diferentes estados posibles del proceso de login.
 sealed class LoginState {
@@ -19,6 +20,12 @@ sealed class AuthState {
     data object Unauthenticated : AuthState()
     data object Loading : AuthState()
     data class Authenticated(val userId: Int) : AuthState()
+}
+
+sealed class CreateUserState {
+    data object Loading : CreateUserState()
+    data class Success(val create: Boolean) : CreateUserState()
+    data class Error(val message: String) : CreateUserState()
 }
 
 /**
@@ -40,6 +47,10 @@ open class AuthViewModel(private val tokenStorage: TokenStorage) : CommonViewMod
     // Estado para indicar si se realizó logout
     private val _isLoggedOut = MutableStateFlow(false)
     val isLoggedOut: StateFlow<Boolean> = _isLoggedOut
+
+    // Estado para indicar si se creo correctamente el usuario
+    private val _createUserState = MutableStateFlow<CreateUserState>(CreateUserState.Loading)
+    val createUserState: StateFlow<CreateUserState> = _createUserState
 
     /**
      * Inicializa la API de autenticación con un HttpClient y el tokenStorage.
@@ -93,6 +104,24 @@ open class AuthViewModel(private val tokenStorage: TokenStorage) : CommonViewMod
 
             } catch (_: Exception) {
                 // Ignorar errores en logout
+            }
+        }
+    }
+
+    /**
+     * Función que permite la creación de usuarios en la base de datos.
+     */
+    fun createUser(nombreUsuario: String, passWrd: String, tipoUsuario: String, idClub: Int?) {
+        viewModelScope.launch {
+            try {
+                val respuesta = AuthApi.createUser(nombreUsuario, passWrd, tipoUsuario, idClub)
+                if (respuesta) {
+                    _createUserState.value = CreateUserState.Success(respuesta)
+                } else {
+                    _createUserState.value = CreateUserState.Error("No se ha podido crear el usuario.")
+                }
+            } catch (e: Exception) {
+                _createUserState.value = CreateUserState.Error("Error creando el usuario: ${e.message}")
             }
         }
     }

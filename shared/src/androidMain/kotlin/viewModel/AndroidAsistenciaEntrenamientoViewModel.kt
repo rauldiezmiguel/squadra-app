@@ -10,6 +10,7 @@ class AndroidAsistenciaEntrenamientoViewModel(tokenStorage: TokenStorage): ViewM
 
     val asistenciasState: StateFlow<AsistenciaEntrenamientoState> = commonAsistenciaEntrenamientoViewModel.asistenciasState
     val asistenciaJugadorState: StateFlow<AsistenciaEntrenamientoJugadorState> = commonAsistenciaEntrenamientoViewModel.asistenciasJugadorState
+    val guardadoState: StateFlow<GuardadoState> = commonAsistenciaEntrenamientoViewModel.guardadoState
 
     fun loadAsistencias(entrenamientoId: Int) {
         commonAsistenciaEntrenamientoViewModel.loadAsistencias(entrenamientoId)

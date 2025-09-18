@@ -19,6 +19,7 @@ class AndroidAuthViewModel(tokenStorage: TokenStorage) : ViewModel() {
     val isLoggedOut get() = commonAuthViewModel.isLoggedOut
     val authState: StateFlow<AuthState> = commonAuthViewModel.authState
     val userRole: StateFlow<String> = commonAuthViewModel.userRole
+    val createUserState: StateFlow<CreateUserState> = commonAuthViewModel.createUserState
 
     /**
      * Inicializa AuthApi con un HttpClient.
@@ -42,6 +43,10 @@ class AndroidAuthViewModel(tokenStorage: TokenStorage) : ViewModel() {
      */
     fun logout() {
         commonAuthViewModel.logout()
+    }
+
+    fun createUser(nombreUsuario: String, passWrd: String, tipoUsuario: String, idClub: Int?) {
+        commonAuthViewModel.createUser(nombreUsuario, passWrd, tipoUsuario, idClub)
     }
 
     fun checkExistingSession() {

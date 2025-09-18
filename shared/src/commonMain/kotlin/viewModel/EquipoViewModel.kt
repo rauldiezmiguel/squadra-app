@@ -22,12 +22,21 @@ sealed class CategoriaState {
     data class Error(val message: String) : CategoriaState()
 }
 
+sealed class EquipoByClubYTemporadaState {
+    data object Loading: EquipoByClubYTemporadaState()
+    data class Success(val equipos: List<EquipoDTO>) : EquipoByClubYTemporadaState()
+    data class Error(val message: String) : EquipoByClubYTemporadaState()
+}
+
 class EquipoViewModel(private val tokenStorage: TokenStorage) : CommonViewModel() {
     private val _equipoState = MutableStateFlow<EquipoState>(EquipoState.Loading)
     val equipoState: StateFlow<EquipoState> = _equipoState
 
     private val _categoriaState = MutableStateFlow<CategoriaState>(CategoriaState.Loading)
     val categoriaState: StateFlow<CategoriaState> = _categoriaState
+
+    private val _equipoByClubYTemporada = MutableStateFlow<EquipoByClubYTemporadaState>(EquipoByClubYTemporadaState.Loading)
+    val equipoByClubYTemporada: StateFlow<EquipoByClubYTemporadaState> = _equipoByClubYTemporada
 
     fun getEquiposForUser() {
 
@@ -75,6 +84,23 @@ class EquipoViewModel(private val tokenStorage: TokenStorage) : CommonViewModel(
                 }
             } catch (e: Exception) {
                 _categoriaState.value = CategoriaState.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    fun getEquiposByClubByTemporada(idClub: Int, idTemporada: Int) {
+        viewModelScope.launch {
+            _equipoByClubYTemporada.value = EquipoByClubYTemporadaState.Loading
+            try {
+                val response = EquipoApi.getEquiposByClubByTemporada(idClub, idTemporada)
+
+                if (response.isNotEmpty()) {
+                    _equipoByClubYTemporada.value = EquipoByClubYTemporadaState.Success(response)
+                } else {
+                    _equipoByClubYTemporada.value = EquipoByClubYTemporadaState.Error("Error obteniendo los equipos del Club con ID: $idClub, en la Temporada con ID: $idTemporada")
+                }
+            } catch (e: Exception) {
+                _equipoByClubYTemporada.value = EquipoByClubYTemporadaState.Error("Error desconocido: ${e.message}")
             }
         }
     }
