@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import network.ClubDTO
 import network.ClubesApi
-import network.CreateClubRequest
 
 sealed class AllClubesState {
     data object Loading : AllClubesState()
