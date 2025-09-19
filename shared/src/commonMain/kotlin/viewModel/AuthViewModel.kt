@@ -13,6 +13,7 @@ sealed class LoginState {
     data object Idle : LoginState()
     data object Loading : LoginState()
     data object NavigateToMainScreen : LoginState()
+    data object NavigateToAdminMainScreen : LoginState()
     data class Error(val message: String) : LoginState()
 }
 
@@ -72,7 +73,11 @@ open class AuthViewModel(private val tokenStorage: TokenStorage) : CommonViewMod
                 val loginResponse = AuthApi.login(username, password)
                 if (loginResponse != null) {
                     tokenStorage.saveTokens(loginResponse.accessToken, loginResponse.refreshToken)
-                    _loginState.value = LoginState.NavigateToMainScreen
+                    if (loginResponse.tipoUsuario == "administrador") {
+                        _loginState.value = LoginState.NavigateToAdminMainScreen
+                    } else {
+                        _loginState.value = LoginState.NavigateToMainScreen
+                    }
                     _authState.value = AuthState.Authenticated(loginResponse.id)
                     _userRole.value = loginResponse.tipoUsuario
                 } else {
