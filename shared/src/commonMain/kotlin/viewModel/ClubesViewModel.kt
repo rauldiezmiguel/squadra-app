@@ -8,7 +8,7 @@ import network.ClubesApi
 
 sealed class AllClubesState {
     data object Loading : AllClubesState()
-    data class Success(val temporadas: List<ClubDTO>) : AllClubesState()
+    data class Success(val temporadas: List<ClubDTO>) : AllClubesState() //Cambiar el nombre temporadas a clubes
     data class Error(val message: String) : AllClubesState()
 }
 
